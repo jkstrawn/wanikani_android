@@ -53,10 +53,15 @@
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Cheeses.cs" />
     <Compile Include="Word.cs" />
     <Compile Include="StudyActivity.cs" />
     <Compile Include="NewWordsActivity.cs" />
+    <Compile Include="Hiragana.cs" />
+    <Compile Include="WebClientEx.cs" />
+    <Compile Include="JsonConverter.cs" />
+    <Compile Include="HiraganaConverter.cs" />
+    <Compile Include="WaniKaniApi.cs" />
+    <Compile Include="KeyListeners.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
