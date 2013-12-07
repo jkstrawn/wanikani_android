@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using Android.Graphics;
 
 namespace Application1
 {
@@ -9,6 +10,7 @@ namespace Application1
 		public List<string> Meanings { get; set; }
 		public int Level { get; set; }
 		public List<string> Synonyms { get; set; }
+		public Color Color { get; set; }
 
 		public Word() {
 			Meanings = new List<string>();
@@ -35,6 +37,8 @@ namespace Application1
 		public string Audio { get; set; }
 
 		public Vocab(string[] data) {
+			Color = Color.Argb(255, 160, 0, 240);
+
 			Id = int.Parse (data [1].Split (',') [0]);
 			Name = data [2].Split ('"')[1];
 			Meanings = GetWordsFromJsonArray (data [3], "kana");
@@ -51,6 +55,8 @@ namespace Application1
 		public List<string> Onyomi { get; set; }
 
 		public Kanji(string[] data) {
+			Color = Color.Argb(255, 240, 0, 160);
+
 			Id = int.Parse (data [1].Split (',') [0]);
 			Name = data [2].Split ('"')[1];
 			Meanings = GetWordsFromJsonArray (data [3], "kana");
@@ -66,6 +72,8 @@ namespace Application1
 		public bool IsImage { get; set; }
 		
 		public Radical(string[] data) {
+			Color = Color.Argb(255, 0, 160, 240);
+
 			Id = int.Parse (data [1].Split (',') [0]);
 			Name = data [2].Split ('"')[1];
 			Meanings = GetWordsFromJsonArray (data [3], "kana");

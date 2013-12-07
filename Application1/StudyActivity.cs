@@ -10,24 +10,22 @@ using System.Json;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Collections.Specialized;
+using Android.Content;
+using Android.Content.PM;
+using Android.Graphics;
+using Android.Text;
 
 namespace Application1
 {
-	[Activity (Label = "StudyActivity")]		
+	[Activity (Label = "StudyActivity", ScreenOrientation = ScreenOrientation.Portrait)]		
 	public class StudyActivity : Activity
 	{
 
-		static List<Word> words = new List<Word> {
-			new Word{ Name = "买", Meanings = new List<string>{"dolphin"}},
-			new Word{ Name = "传", Meanings = new List<string>{"killer whale"}},
-			new Word{ Name = "你", Meanings = new List<string>{"eel"}},
-			new Word{ Name = "侠", Meanings = new List<string>{"manatee"}},
-			new Word{ Name = "倀", Meanings = new List<string>{"otter"}},
-			new Word{ Name = "倐", Meanings = new List<string>{"shark"}}
-		};
+		static List<Word> words = new List<Word>();
 
 		static int wordIndex = -1;
 		EditText guessText;
+		LinearLayout parentView;
 
 		protected override void OnCreate (Bundle savedInstanceState)
 		{
@@ -36,16 +34,60 @@ namespace Application1
 
 			SetContentView(Resource.Layout.StudyVocab);
 
+			parentView = (LinearLayout)FindViewById (Resource.Id.abc);
 			guessText = (EditText) FindViewById (Resource.Id.shark);
-
-			Console.WriteLine ("stuff: " + guessText.Enabled);
 			guessText.SetOnKeyListener(new MyListener(this));
+			var myWatcher = new MyWatcher (this);
+			guessText.AddTextChangedListener (myWatcher); 
 			DisplayNewWord ();
 
 			var button = FindViewById<Button>(Resource.Id.submit);
 			button.Click += (sender, e) => {
 				conversion();
 			};
+		}
+
+		public class MyWatcher : Java.Lang.Object, ITextWatcher {
+			readonly StudyActivity activity;
+			bool editable = true;
+
+			public MyWatcher(StudyActivity _activity) {
+				activity = _activity;
+			}
+
+			public void AfterTextChanged (IEditable s)
+			{
+				Console.WriteLine ("attempting to change");
+				if (editable) {
+					Console.WriteLine ("changing text");
+					editable = false;
+					activity.ConvertToHiragana ();
+					editable = true;
+				}
+			}
+
+			public void BeforeTextChanged (Java.Lang.ICharSequence s, int start, int count, int after)
+			{
+
+			}
+
+			public void OnTextChanged (Java.Lang.ICharSequence s, int start, int before, int count)
+			{
+
+			}
+		}
+
+		public void ConvertToHiragana() {
+			var temp = guessText.Text;
+			//guessText.Text = temp;
+			guessText.SetSelection(temp.Length);
+		}
+
+		protected override void OnStart() {
+			base.OnStart ();
+
+			InputMethodManager inputMethodManager=(InputMethodManager)GetSystemService(Context.InputMethodService);
+			inputMethodManager.ToggleSoftInput(ShowFlags.Forced, 0);
 		}
 
 		private void conversion() {
@@ -138,9 +180,11 @@ namespace Application1
 
 		private void DisplayNewWord() {
 			wordIndex++;
+			var word = words [wordIndex];
 
 			var kanjiText = (TextView) FindViewById (Resource.Id.kanji);
-			kanjiText.Text = words [wordIndex].Name;
+			kanjiText.Text = word.Name;
+			parentView.SetBackgroundColor (word.Color);
 		}
 
 		private void SubmitGuess() {
@@ -156,9 +200,9 @@ namespace Application1
 
 		private bool GuessIsCorrect (string guess, List<string> correctWords)
 		{
+
 			foreach (var word in correctWords) {
-				Console.WriteLine (word.ToLowerInvariant() + " vs " + guess);
-				if (word.ToLowerInvariant () == guess) {
+				if (word.ToLowerInvariant () == guess.Trim()) {
 					return true;
 				}
 			}
@@ -175,11 +219,163 @@ namespace Application1
 
 			public bool OnKey (View v, Keycode keyCode, KeyEvent e)
 			{
-				if (e.KeyCode == Keycode.Enter) {
+				if (e.KeyCode == Keycode.Enter && e.Action == 0) {
 					activity.SubmitGuess ();				
 				}
 				return false;
 			}
+		}
+
+		public string ConvertToJapanese(string input)
+		{
+			var combos = new Dictionary<string, string>
+			{
+				{"wa", "わ"},
+				{"ra", "ら"},
+				{"ya", "や"},
+				{"ma", "ま"},
+				{"ha", "は"},
+				{"na", "な"},
+				{"ta", "た"},
+				{"sa", "さ"},
+				{"ka", "か"},
+				{"a", "あ"},
+				{"ri", "り"},
+				{"mi", "み"},
+				{"hi", "ひ"},
+				{"ni", "に"},
+				{"chi", "ち"},
+				{"shi", "し"},
+				{"ki", "き"},
+				{"i", "い"},
+				{"ru", "る"},
+				{"yu", "ゆ"},
+				{"mu", "む"},
+				{"fu", "ふ"},
+				{"nu", "ぬ"},
+				{"tsu", "つ"},
+				{"su", "す"},
+				{"ku", "く"},
+				{"u", "う"},
+				{"re", "れ"},
+				{"me", "め"},
+				{"he", "へ"},
+				{"ne", "ね"},
+				{"te", "て"},
+				{"se", "せ"},
+				{"ke", "け"},
+				{"e", "え"},
+				{"wo", "を"},
+				{"ro", "ろ"},
+				{"yo", "よ"},
+				{"mo", "も"},
+				{"ho", "ほ"},
+				{"no", "の"},
+				{"to", "と"},
+				{"so", "そ"},
+				{"ko", "こ"},
+				{"o", "お"},
+				{"pa", "ぱ"},
+				{"ba", "ば"},
+				{"da", "だ"},
+				{"za", "ざ"},
+				{"ga", "が"},
+				{"pi", "ぴ"},
+				{"bi", "び"},
+				{"ji", "じ"},
+				{"gi", "ぎ"},
+				{"pu", "ぷ"},
+				{"bu", "ぶ"},
+				{"dzu", "づ"},
+				{"zu", "ず"},
+				{"gu", "ぐ"},
+				{"pe", "ぺ"},
+				{"be", "べ"},
+				{"de", "で"},
+				{"ze", "ぜ"},
+				{"ge", "げ"},
+				{"po", "ぽ"},
+				{"bo", "ぼ"},
+				{"do", "ど"},
+				{"zo", "ぞ"},
+				{"go", "ご"},
+				{"pya", "ぴゃ"},
+				{"bya", "びゃ"},
+				{"ja", "じゃ"},
+				{"gya", "ぎゃ"},
+				{"rya", "りゃ"},
+				{"mya", "みゃ"},
+				{"hya", "ひゃ"},
+				{"nya", "にゃ"},
+				{"cha", "ちゃ"},
+				{"sha", "しゃ"},
+				{"kya", "きゃ"},
+				{"pyu", "ぴゅ"},
+				{"byu", "びゅ"},
+				{"ju", "じゅ"},
+				{"gyu", "ぎゅ"},
+				{"ryu", "りゅ"},
+				{"myu", "みゅ"},
+				{"hyu", "ひゅ"},
+				{"nyu", "にゅ"},
+				{"chu", "ちゅ"},
+				{"shu", "しゅ"},
+				{"kyu", "きゅ"},
+				{"pyo", "ぴょ"},
+				{"byo", "びょ"},
+				{"jo", "じょ"},
+				{"gyo", "ぎょ"},
+				{"ryo", "りょ"},
+				{"myo", "みょ"},
+				{"hyo", "ひょ"},
+				{"nyo", "にょ"},
+				{"cho", "ちょ"},
+				{"sho", "しょ"},
+				{"kyo", "きょ"}
+			};
+
+			var beginning = "";
+
+			foreach (var character in input)
+			{
+				var code = (int) character;
+				if (code > 1000)
+				{
+					beginning += input[0];
+					input = input.Substring(1, input.Length - 1);
+				}
+			}
+
+			if (combos.ContainsKey(input))
+			{
+				input = combos[input];
+			}
+			else if (ShouldAddSmallTsu(input))
+			{
+				input = ReplaceFirstCharacter(input, 'っ');
+			}
+			else if (ShouldConvertN(input))
+			{
+				input = ReplaceFirstCharacter(input, 'ん');
+			}
+
+			return beginning + input;
+		}
+
+		private static bool ShouldAddSmallTsu(string input)
+		{
+			return input.Length > 1 && input[0] == input[1];
+		}
+
+		private static bool ShouldConvertN(string input)
+		{
+			return input.Length > 1 && input[0] == 'n';
+		}
+
+		private string ReplaceFirstCharacter(string input, char character)
+		{
+			input = character + input.Substring(1, input.Length - 1); ;
+			return input;
 		}
 	}
 }
