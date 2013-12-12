@@ -4,9 +4,24 @@ namespace Application1
 {
 	public class HiraganaConverter
 	{
-		public string Convert(string input)
+		public string Convert(string text)
 		{
+			if (text.Trim () == "") {
+				return text;
+			}
+
+			var converted = ConvertChunk (text);
+
+			if (converted == text.Trim ()) {
+				converted = RetryConvert (text);
+			}
+
+			return converted;
+		}
+
+		public string ConvertChunk(string text) {
 			var beginning = "";
+			var input = text.Trim();
 
 			foreach (var character in input)
 			{
@@ -22,16 +37,28 @@ namespace Application1
 			{
 				input = Hiragana.Combos[input];
 			}
-			else if (ShouldAddSmallTsu(input))
-			{
-				input = ReplaceFirstCharacter(input, 'っ');
-			}
 			else if (ShouldConvertN(input))
 			{
 				input = ReplaceFirstCharacter(input, 'ん');
 			}
+			else if (ShouldAddSmallTsu(input))
+			{
+				input = ReplaceFirstCharacter(input, 'っ');
+			}
 
 			return beginning + input;
+		}
+
+		private string RetryConvert(string text) {
+			var charArray = text.ToCharArray();
+			var input = charArray[0].ToString();
+
+			for (var i = 1; i < charArray.Length; i++) {
+				input = ConvertChunk (input);
+				input += charArray[i];
+			}
+
+			return input;
 		}
 
 		private static bool ShouldAddSmallTsu(string input)

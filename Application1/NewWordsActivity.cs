@@ -22,14 +22,7 @@ namespace Application1
 		MyAdapter adapter;
 		ViewPager pager;
 
-		static readonly List<Word> words = new List<Word> {
-			new Word{ Name = "买", Meanings = new List<string>{"dolphin"}},
-			new Word{ Name = "传", Meanings = new List<string>{"killer whale"}},
-			new Word{ Name = "你", Meanings = new List<string>{"eel"}},
-			new Word{ Name = "侠", Meanings = new List<string>{"manatee"}},
-			new Word{ Name = "倀", Meanings = new List<string>{"otter"}},
-			new Word{ Name = "倐", Meanings = new List<string>{"shark"}}
-		};
+		static List<Word> words = new List<Word> ();
 
 		protected override void OnCreate (Bundle savedInstanceState)
 		{

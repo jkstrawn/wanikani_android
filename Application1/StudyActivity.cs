@@ -6,6 +6,8 @@ using Android.Views.InputMethods;
 using System.Collections.Generic;
 using Android.Content;
 using Android.Content.PM;
+using Android.Text;
+using Android.Views;
 
 namespace Application1
 {
@@ -14,12 +16,17 @@ namespace Application1
 	{
 		static List<Word> words = new List<Word>();
 
-		static int wordIndex = -1;
-		EditText guessText;
+		static int wordIndex = 0;
+		static bool typingHiragana = false;
+
+		public EditText guessText;
+		TextView kanjiText;
+		TextView typeText;
 		LinearLayout parentView;
-		readonly JsonConverter jsonConverter = new JsonConverter ();
-		readonly HiraganaConverter hiraganaConverter = new HiraganaConverter();
-		readonly WaniKaniApi api = new WaniKaniApi();
+
+		readonly static JsonConverter jsonConverter = new JsonConverter ();
+		readonly static HiraganaConverter hiraganaConverter = new HiraganaConverter();
+		readonly static WaniKaniApi api = new WaniKaniApi();
 
 		protected override void OnCreate (Bundle savedInstanceState)
 		{
@@ -27,7 +34,12 @@ namespace Application1
 			SetContentView(Resource.Layout.StudyVocab);
 
 			parentView = (LinearLayout)FindViewById (Resource.Id.abc);
+			kanjiText = (TextView) FindViewById (Resource.Id.kanji);
+			typeText = (TextView) FindViewById (Resource.Id.type);
 			guessText = (EditText) FindViewById (Resource.Id.shark);
+
+
+			guessText.SetRawInputType (InputTypes.TextFlagNoSuggestions);
 			guessText.SetOnKeyListener(new MyKeyListener(this));
 			guessText.AddTextChangedListener (new MyTextListener (this)); 
 
@@ -39,6 +51,52 @@ namespace Application1
 			conversion();
 			DisplayNewWord ();
 		}
+
+		public class MyInputFilter : Java.Lang.Object, IInputFilter {
+			public EditText GuessText;
+			string converted = "";
+
+			public MyInputFilter(EditText _guessText) {
+				GuessText = _guessText;
+			}
+			public Java.Lang.ICharSequence FilterFormatted (Java.Lang.ICharSequence source, 
+				int start, int end, ISpanned dest, int dstart, int dend)
+			{
+				/*
+				Console.WriteLine ("current: \"" + GuessText.Text + "\", in: \"" + source + "\"");
+				if (source.Length () > 0) {
+					converted = hiraganaConverter.Convert (GuessText.Text + source);
+					//GuessText.Text = "";
+					Console.WriteLine ("converted: \"" + converted + "\"");
+				}
+				Console.WriteLine ("returning converted: \"" + converted + "\"");
+				return new Java.Lang.String (converted);
+
+				Console.WriteLine (start + ", " + end + ", " + dstart + ", " + dend);
+				Console.WriteLine (dest);
+				return source;
+
+*/
+				/*
+				if (source.Length ()  == 0) {
+					Console.WriteLine ("backspace");
+				}
+
+				Console.WriteLine ("still works 1");
+				if (source.Length () > 0) {
+					if(source.CharAt(source.Length() - 1) == 'a') {
+						Console.WriteLine ("source: \"" + source + '"');
+						Console.WriteLine ("dest: \"" + dest + '"');
+						//GuessText.DispatchKeyEvent (new KeyEvent(0, Keycode.Del));
+					}
+					return new Java.Lang.String (source.CharAt (source.Length () - 1).ToString());
+				}
+				*/
+				return null;
+			}
+		}
+
+
 
 		protected override void OnStart() {
 			base.OnStart ();
@@ -53,9 +111,18 @@ namespace Application1
 		}
 
 		public void OnTextChange() {
-			var temp = guessText.Text;
-			guessText.Text = temp;
-			guessText.SetSelection(temp.Length);
+			/*
+			Console.WriteLine (guessText.Text);
+			if (typingHiragana) {
+				var temp = guessText.Text;
+				var converted = hiraganaConverter.Convert (temp);
+				Console.WriteLine (converted);
+				if (converted != temp) {
+					guessText.Text = converted;
+					guessText.SetSelection(converted.Length);
+				}
+			}
+			*/
 		}
 
 		public void EnterKeyPressed() {
@@ -64,19 +131,41 @@ namespace Application1
 
 		private void SubmitGuess() {
 			var guess = guessText.Text;
-			var correctWords = words [wordIndex].Meanings;
 
-			if (GuessIsCorrect(guess, correctWords)) {
+			if (IsGuessCorrect(guess)) {
 				DisplayNewWord ();
 			}
 
 			guessText.Text = "";
 		}
 
-		private bool GuessIsCorrect (string guess, List<string> correctWords)
+		private bool IsGuessCorrect(string guess) {
+			if (typingHiragana) {
+				return IsHiraganaGuessCorrect (guess);
+			}
+			return IsEnglishGuessCorrect (guess);
+		}
+
+		private bool IsEnglishGuessCorrect (string guess)
 		{
-			foreach (var word in correctWords) {
+			var meanings = words [wordIndex].Meanings;
+
+			foreach (var word in meanings) {
 				if (word.ToLowerInvariant () == guess.Trim()) {
+					words [wordIndex].NeedMeaning = false;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private bool IsHiraganaGuessCorrect(string guess) {
+			var readings = words [wordIndex].GetReadings ();
+
+			foreach (var word in readings) {
+				if (word.ToLowerInvariant () == guess.Trim()) {
+					words [wordIndex].NeedReading = false;
 					return true;
 				}
 			}
@@ -85,12 +174,24 @@ namespace Application1
 		}
 
 		private void DisplayNewWord() {
-			wordIndex++;
-			var word = words [wordIndex];
+			var currentWord = words [wordIndex];
 
-			var kanjiText = (TextView) FindViewById (Resource.Id.kanji);
-			kanjiText.Text = word.Name;
-			parentView.SetBackgroundColor (word.Color);
+			kanjiText.Text = currentWord.Name;
+			parentView.SetBackgroundColor (currentWord.Color);
+
+			if (currentWord.NeedMeaning) {
+				Console.WriteLine ("show new meaning");
+				typeText.Text = "Meaning";
+				typingHiragana = false;
+			} else if (currentWord.NeedReading) {
+				Console.WriteLine ("show new reading");
+				typeText.Text = "Reading";
+				typingHiragana = true;
+			} else {
+				Console.WriteLine ("get next word");
+				wordIndex++;
+				DisplayNewWord ();	
+			}
 		}
 	}
 }

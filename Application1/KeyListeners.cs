@@ -6,19 +6,20 @@ namespace Application1
 {
 	public class MyTextListener : Java.Lang.Object, ITextWatcher {
 		readonly StudyActivity activity;
-		bool editable = true;
+		readonly HiraganaConverter HiraganaConverter;
 
 		public MyTextListener(StudyActivity _activity) {
 			activity = _activity;
+			HiraganaConverter = new HiraganaConverter ();
 		}
 
 		public void AfterTextChanged (IEditable s)
 		{
-			if (editable) {
-				editable = false;
-				activity.OnTextChange ();
-				editable = true;
+			var converted = HiraganaConverter.Convert (s.ToString());
+			if (s.ToString() == converted) {
+				return;
 			}
+			s.Replace (0, s.Length(), converted);
 		}
 
 		public void BeforeTextChanged (Java.Lang.ICharSequence s, int start, int count, int after) {}

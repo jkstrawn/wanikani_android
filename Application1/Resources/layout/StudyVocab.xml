@@ -9,11 +9,19 @@
         android:layout_height="45dip"
         android:paddingLeft="5dip"
         android:paddingRight="5dip"
-        android:textColor="#ffCCCC22"
         android:gravity="center_vertical|center_horizontal"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/kanji"
         android:id="@+id/kanji" />
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="45dip"
+        android:paddingLeft="5dip"
+        android:paddingRight="5dip"
+        android:gravity="center_vertical|center_horizontal"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/kanji"
+        android:id="@+id/type" />
     <Button
         android:id="@+id/submit"
         android:layout_width="wrap_content"
